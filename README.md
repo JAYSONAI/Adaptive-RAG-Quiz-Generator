@@ -4,8 +4,9 @@
 
 Built to prepare for the **Microsoft AI-103** exam, but it works with any PDF, DOCX, TXT, Markdown or HTML you put in the knowledge folder.
 
-https://github.com/JAYSONAI/Adaptive-RAG-Quiz-Generator/blob/main/docslobby.jpg?raw=true 
-https://github.com/JAYSONAI/Adaptive-RAG-Quiz-Generator/blob/main/docsgame.jpg?raw=true
+<img width="1163" height="920" alt="docslobby" src="https://github.com/user-attachments/assets/35aa4342-4f2f-4218-a88a-249f9d8ec6b2" />
+<img width="1175" height="705" alt="docsgame" src="https://github.com/user-attachments/assets/12ec10df-634b-45e3-aae4-dfc1fd40a12f" />
+
 ---
 
 ## Table of Contents
