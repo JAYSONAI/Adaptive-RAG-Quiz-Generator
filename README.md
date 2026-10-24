@@ -192,5 +192,4 @@ The suite (about 175 tests) uses in-memory Chroma/Qdrant and scripted mock serve
 - Docker setup and cross-platform launcher
 - Evaluation dashboard for question quality
 
-## License
-Add a license of your choice (for example MIT) before publishing.
+
