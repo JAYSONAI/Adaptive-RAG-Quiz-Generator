@@ -1,94 +1,199 @@
-#Adaptive RAG quiz generator
+# Quiz Showdown
 
-This quiz generator that writes cited, validated exam questions only from the books you choose, played in a game-show-style dashboard. Built for Microsoft AI-103 prep.
-Project Overview
+**An adaptive, book-grounded exam-practice game. Pick your own study material, and get cited quiz questions in a "Who Wants to Be a Millionaire"-style interface.**
 
-What it does: Indexes your PDF, DOCX, TXT, Markdown and HTML study material, then generates practice questions from only the books you select. Each question cites its source and passes schema, citation, grounding and duplicate checks before you see it.
+Built to prepare for the **Microsoft AI-103** exam, but it works with any PDF, DOCX, TXT, Markdown or HTML you put in the knowledge folder.
 
-Why it was built: To practice for the Microsoft AI-103 exam with questions grounded in real study material instead of invented facts. It is not tied to one subject: change the files and it adapts.
+> Screenshots: add `docs/lobby.png` and `docs/game.png`, then uncomment the images in the [Screenshots](#screenshots) section.
 
-Who it is for: Exam candidates, students, teachers and trainers who want self-testing from their own notes; developers learning RAG.
+---
 
-Key benefits:
+## Table of Contents
+- [Why this project](#why-this-project)
+- [Features](#features)
+- [How it works](#how-it-works)
+- [Tech stack](#tech-stack)
+- [Project structure](#project-structure)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Configuration](#configuration)
+- [API](#api)
+- [Testing](#testing)
+- [Screenshots](#screenshots)
+- [Known limitations](#known-limitations)
+- [Roadmap](#roadmap)
+- [License](#license)
 
-Questions trace back to your material.
-Works with several books at once; add more any time.
-Runs locally (Ollama) or with Groq models.
-Honest failure: an error message, never made-up questions.
+## Why this project
+Generic quiz generators invent facts. This one only writes questions from the books you select, cites the source of each one, and reports an error instead of making something up when the evidence is not enough.
 
-Features
-Multi-source knowledge base: select any combination of books.
-Hybrid retrieval with source isolation: per-book filtered search; chunks from unselected books are dropped.
-BGE reranking: picks the most relevant passages; fallback is reported, not hidden.
-7 question types: multiple choice, true/false, fill in the blank, short answer, case study, drag and drop, interactive lab.
-Adaptive difficulty: easy, medium, hard based on recent performance.
-Duplicate prevention: within a quiz and against history.
-Strict validation: Pydantic schemas, citation and grounding checks, bounded regeneration.
-Model dropdown: local Ollama and Groq models with a default.
-Resilient LLM layer: 429 classification, backoff with jitter, coalescing, caching, token budgets, opt-in fallback.
-One-click startup: auto-setup, background indexing, model warm-up.
-Game-show dashboard: ladder, lifelines, timer, sound, animations, keyboard controls.
+## Features
+- **Multi-source knowledge base:** select one or several books; questions come only from the selected sources. Add more books at any time.
+- **Source-constrained hybrid retrieval:** per-book search with metadata filters, rank fusion, and a post-filter that drops anything from unselected sources.
+- **BGE reranking:** `BAAI/bge-reranker-v2-m3` picks the most relevant passages (with a clearly reported fallback if the reranker is down).
+- **7 question types:** multiple choice, true/false, fill in the blank, short answer, case study, drag and drop, interactive lab.
+- **Adaptive difficulty:** easy / medium / hard policy based on recent results.
+- **Duplicate prevention:** within the current quiz and against supplied history.
+- **Strict validation:** JSON schema (Pydantic), citation checks, a lexical grounding check, and bounded regeneration. Failed questions are rejected, never fabricated.
+- **Model dropdown:** local Ollama models and Groq models, with a configurable default.
+- **Resilient LLM layer:** classified HTTP 429 handling, bounded retries with exponential backoff and jitter, request coalescing, caching, token budgeting, and an opt-in, always-reported fallback to a local model.
+- **One-click startup:** `START.bat` sets up the environment, indexes new or changed books in the background, warms up the models and opens the dashboard.
+- **Game-show dashboard:** prize ladder, lifelines (50:50, simulated poll, skip), lock-in suspense, optional timer, sound, confetti and keyboard controls.
 
-Tech Stack
-Python, FastAPI, Uvicorn: backend and REST API.
-Pydantic v2: typed question schemas and strict parsing.
-ChromaDB (Qdrant supported): vector storage with metadata filters.
-Ollama (bge-m3): embeddings; also local LLMs such as llama3.2:3b.
-FlagEmbedding (bge-reranker-v2-m3): reranking.
-Groq API: hosted LLMs such as openai/gpt-oss-20b.
-pypdf, python-docx: document text extraction.
-httpx: HTTP clients.
-HTML, CSS, JavaScript, WebAudio: dashboard.
-pytest, jsdom: tests.
+## How it works
+```
+Selected books
+   |
+   v
+Per-source hybrid retrieval (vector + keyword, metadata filter)
+   |
+   v
+Isolation check (drop any chunk from an unselected source)
+   |
+   v
+BGE reranker (top N passages)
+   |
+   v
+LLM question writer (Groq or Ollama, JSON mode)
+   |
+   v
+Validation: schema -> citations -> grounding -> duplicates -> regenerate if needed
+   |
+   v
+Learner view (answers hidden until you lock in) -> game dashboard
+```
 
-Folder Structure
-START.bat: one-click launcher.
-quiz_server.py: server entry point.
-agents/<shelf>/knowledge/: where you put books; each shelf is a separate library.
-app/quiz/: the engine (retrieval, reranker, LLM layer, validation, adaptive logic, indexer, API routes).
-frontend/quiz.html: game-show dashboard.
-tools/reranker_service.py: local reranker service.
-eval/: quiz quality evaluation.
-tests/: pytest suite.
+## Tech stack
+| Area | Technology | Purpose |
+|---|---|---|
+| Language / API | Python 3.10+, FastAPI, Uvicorn | Backend and REST API |
+| Validation | Pydantic v2 | Typed question schemas, strict parsing |
+| Vector store | ChromaDB (Qdrant supported) | Document embeddings and filtered search |
+| Embeddings | Ollama `bge-m3` | Document and query vectors |
+| Reranking | FlagEmbedding, `bge-reranker-v2-m3` | Passage relevance scoring |
+| LLMs | Groq API, Ollama (e.g. `llama3.2:3b`) | Question generation |
+| Documents | pypdf, python-docx | Text extraction |
+| HTTP | httpx | Service and LLM calls |
+| Frontend | HTML, CSS, vanilla JavaScript, WebAudio | Game-show dashboard |
+| Tests | pytest, jsdom | Backend and dashboard tests |
 
-Installation Guide
-Install Python 3.10+ and Ollama.
-git clone https://github.com/<your-username>/quiz-showdown.git and open the folder.
-ollama pull bge-m3 and ollama pull llama3.2:3b.
-Create the reranker environment once: py -3 -m venv %USERPROFILE%\.venv-reranker, then %USERPROFILE%\.venv-reranker\Scripts\pip install -r requirements-reranker.txt.
-Put your books in agents\library\knowledge\.
-(Optional) add GROQ_API_KEY to .env after the first run.
+## Project structure
+```
+quiz_agent/
+├── START.bat                 One-click launcher (Windows)
+├── quiz_server.py            App entry point: serves dashboard + API, auto-index, warm-up
+├── .env.example              Settings template (copy to .env)
+├── requirements-quiz.txt     Server dependencies
+├── requirements-reranker.txt Reranker dependencies
+├── agents/library/knowledge/ PUT YOUR BOOKS HERE (add more shelves: agents/<name>/knowledge/)
+├── app/quiz/
+│   ├── service.py            Orchestrates the pipeline
+│   ├── retrieval.py          Per-source hybrid retrieval and fusion
+│   ├── reranker.py           BGE reranker (in-process or HTTP service)
+│   ├── llm.py                Groq/Ollama clients, retries, budgets, fallback, model list
+│   ├── prompts.py            Prompt construction
+│   ├── schemas.py            Question types and request/response models
+│   ├── validator.py          Schema, citation and grounding checks
+│   ├── adaptive.py           Difficulty policy
+│   ├── duplicates.py         Duplicate detection
+│   ├── indexer.py            Built-in document indexer
+│   ├── envfix.py             .env auto-repair
+│   ├── routes.py             API endpoints
+│   └── sources.py, adapters.py, wiring.py, ports.py, config.py
+├── frontend/quiz.html        Game-show dashboard
+├── tools/reranker_service.py Local reranker HTTP service
+├── eval/quiz_eval.py         Quiz quality evaluation
+└── tests/                    pytest suite
+```
 
-Usage Guide
-Double-click START.bat, wait for the dashboard to open, pick a model, press PLAY. Keep the black window open while playing.
+## Installation
+**Prerequisites:** Windows, Python 3.10+, [Ollama](https://ollama.com) running. Optional: a [Groq](https://console.groq.com) API key.
 
-Screenshots Section (captions)
-Lobby: "Choose your books, model, question types and difficulty. Everything is pre-selected, so you just press PLAY."
-Game screen: "A source-cited question with answer plates, prize ladder and lifelines."
-Reveal: "Correct answers show the explanation and the book the question came from."
-Results: "Score, source citations and the model that wrote the quiz."
-Status chips: "Live status of the model, Ollama, reranker and book index."
-10. Example Workflow
-Add ai-103-notes.pdf and azure-ai-guide.docx to the knowledge folder.
-Double-click START.bat; both books are indexed in the background.
-In the lobby, keep both books selected, choose groq: openai/gpt-oss-20b, 10 questions, mixed types, medium.
-Press PLAY. The server retrieves from each book, reranks, writes and validates the questions.
-Answer each question, lock in, see the explanation and citation.
-On the results screen, review mistakes and play again at a higher difficulty.
+1. Clone the repository and open the folder.
+   ```
+   git clone https://github.com/<your-username>/quiz-showdown.git
+   cd quiz-showdown
+   ```
+2. Pull the models:
+   ```
+   ollama pull bge-m3
+   ollama pull llama3.2:3b
+   ```
+3. (Recommended) Create the reranker environment once. It must be able to import `FlagEmbedding`. By default the launcher looks for `%USERPROFILE%\.venv-reranker`.
+   ```
+   py -3 -m venv %USERPROFILE%\.venv-reranker
+   %USERPROFILE%\.venv-reranker\Scripts\pip install -r requirements-reranker.txt
+   ```
+4. Put your books in `agents\library\knowledge\`.
+5. (Optional) Add `GROQ_API_KEY=...` to `.env` after the first run.
 
-Architecture Summary
-The dashboard calls a FastAPI service. For each request the service resolves the selected sources, runs filtered hybrid retrieval per book, removes any chunk from an unselected source, and reranks the rest with a BGE cross-encoder. A prompt with only that evidence goes to the chosen LLM in JSON mode. The reply is parsed and validated (schema, citations, grounding, duplicates); invalid or duplicate questions trigger bounded regeneration. The learner view hides answers until you lock in. A separate LLM layer handles rate limits, retries, token budgets and caching, and a background indexer keeps the vector store in sync with the knowledge folder.
+## Usage
+1. Double-click **`START.bat`**. It creates `.env` if needed, installs packages, starts the reranker window, indexes your books and opens http://127.0.0.1:8800.
+2. In the lobby, books are pre-selected. Choose a model from the dropdown, question types, count and difficulty.
+3. Press **PLAY**.
+4. Answer with the mouse or keyboard (A-D / 1-4, T/F, Enter to lock in). Use lifelines if you get stuck.
+5. Review your results, citations and the model used on the results screen.
 
-Future Improvements
-OCR for scanned PDFs; server-side grading and learner history; spaced repetition; export to PDF or Anki; Docker and cross-platform launcher; question-quality evaluation dashboard; optional LangChain or LlamaIndex integration; multi-user accounts.
+Keep the black START.bat window open while you play.
 
-Challenges Solved
-Keeping questions strictly inside the selected books (source isolation before reranking).
-Distinguishing and handling Groq per-minute vs daily rate limits without retry storms.
-Empty or truncated LLM output caused by token budgets (finish_reason=length) with a controlled larger-budget retry.
+## Configuration
+Copy `.env.example` to `.env` (done automatically). Key settings:
 
-Small local models returning incomplete JSON (strict validation, regeneration, tolerant handling of a missing headline field on scenario types).
-Slow reranker calls (candidate cap, passage truncation, warm-up, honest fallback).
-First-run friction on Windows (auto .env repair, background indexing, one-click launcher).
+| Variable | Meaning |
+|---|---|
+| `QUIZ_LLM_PROVIDER`, `QUIZ_LLM_MODEL` | Default model (e.g. `ollama` / `llama3.2:3b`) |
+| `GROQ_API_KEY` | Enables Groq models in the dropdown |
+| `QUIZ_LLM_FALLBACK` | `true` allows a reported fallback to a local model on rate limits |
+| `QUIZ_LLM_MAX_RETRIES`, `QUIZ_LLM_MAX_WAIT` | Bounds for 429 retries |
+| `RERANKER_ENABLED`, `RERANKER_TIMEOUT`, `RERANKER_FALLBACK` | Reranker behaviour |
+| `AGENTS_DIR`, `CHROMA_PATH` | Where books and the vector store live |
 
-rag, retrieval-augmented-generation, llm, quiz-generator, exam-prep, education, ai-103, azure-ai, fastapi, python, chromadb, ollama, groq, reranker, bge, embeddings, semantic-search, pydantic, gamification, study-tool
+Never commit your `.env`. Only `.env.example` belongs in the repository.
+
+## API
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/quiz/agents` | List knowledge shelves |
+| GET | `/api/quiz/sources?agent=` | List indexed books |
+| GET | `/api/quiz/models` | Models for the dropdown |
+| GET | `/api/quiz/status` | Model, Ollama, reranker and index status |
+| GET | `/api/quiz/health` | Health check |
+| POST | `/api/quiz/generate` | Generate a quiz |
+
+```json
+{"agent":"library","selected_source_ids":["src_1a2b3c"],"type":"mixed","count":5,
+ "difficulty":"medium","include_answers":false}
+```
+
+## Testing
+```
+python -m pytest
+```
+The suite (about 175 tests) uses in-memory Chroma/Qdrant and scripted mock servers for the LLM, Ollama and the reranker, so it needs no network. The dashboard was checked with jsdom against the real API.
+
+## Screenshots
+<!-- Uncomment once you add the images
+![Lobby: choose books, model and question types](docs/lobby.png)
+![Game screen: question, prize ladder and lifelines](docs/game.png)
+-->
+- **Lobby:** select books, choose a model from the dropdown, pick question types, and press PLAY.
+- **Game screen:** a cited question with answer plates, prize ladder and lifelines.
+- **Results:** score, source citations, and which model wrote the quiz.
+
+## Known limitations
+- The grounding check is lexical: it catches unsupported answers, not subtle factual errors.
+- Scanned (image-only) PDFs are reported as failed because OCR is not included.
+- The "Poll" lifeline is simulated and labelled as such.
+- Windows launchers are provided; other platforms can run `python quiz_server.py` manually.
+- Output quality depends on the model. Small local models can struggle with complex question types.
+
+## Roadmap
+- OCR for scanned PDFs
+- Server-side grading and learner history
+- Spaced repetition and weak-topic review
+- Export to PDF / Anki
+- Docker setup and cross-platform launcher
+- Evaluation dashboard for question quality
+
+## License
+Add a license of your choice (for example MIT) before publishing.

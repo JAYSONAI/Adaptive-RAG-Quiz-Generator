@@ -1,0 +1,15 @@
+# secrets and local settings
+.env
+# environments and caches
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+node_modules/
+# local data: vector store, index manifest, your books
+data/
+agents/*/knowledge/*
+!agents/*/knowledge/.keep
+*.log
+.DS_Store

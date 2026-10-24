@@ -1,0 +1,9 @@
+pydantic>=2
+fastapi
+uvicorn
+httpx
+chromadb
+pypdf
+python-docx
+# optional
+qdrant-client
