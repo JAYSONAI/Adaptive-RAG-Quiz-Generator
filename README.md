@@ -27,7 +27,8 @@ Model dropdown: local Ollama and Groq models with a default.
 Resilient LLM layer: 429 classification, backoff with jitter, coalescing, caching, token budgets, opt-in fallback.
 One-click startup: auto-setup, background indexing, model warm-up.
 Game-show dashboard: ladder, lifelines, timer, sound, animations, keyboard controls.
-5. Tech Stack
+
+Tech Stack
 Python, FastAPI, Uvicorn: backend and REST API.
 Pydantic v2: typed question schemas and strict parsing.
 ChromaDB (Qdrant supported): vector storage with metadata filters.
@@ -38,7 +39,8 @@ pypdf, python-docx: document text extraction.
 httpx: HTTP clients.
 HTML, CSS, JavaScript, WebAudio: dashboard.
 pytest, jsdom: tests.
-6. Folder Structure
+
+Folder Structure
 START.bat: one-click launcher.
 quiz_server.py: server entry point.
 agents/<shelf>/knowledge/: where you put books; each shelf is a separate library.
@@ -47,18 +49,19 @@ frontend/quiz.html: game-show dashboard.
 tools/reranker_service.py: local reranker service.
 eval/: quiz quality evaluation.
 tests/: pytest suite.
-7. Installation Guide
+
+Installation Guide
 Install Python 3.10+ and Ollama.
 git clone https://github.com/<your-username>/quiz-showdown.git and open the folder.
 ollama pull bge-m3 and ollama pull llama3.2:3b.
 Create the reranker environment once: py -3 -m venv %USERPROFILE%\.venv-reranker, then %USERPROFILE%\.venv-reranker\Scripts\pip install -r requirements-reranker.txt.
 Put your books in agents\library\knowledge\.
 (Optional) add GROQ_API_KEY to .env after the first run.
-8. Usage Guide
 
+Usage Guide
 Double-click START.bat, wait for the dashboard to open, pick a model, press PLAY. Keep the black window open while playing.
 
-9. Screenshots Section (captions)
+Screenshots Section (captions)
 Lobby: "Choose your books, model, question types and difficulty. Everything is pre-selected, so you just press PLAY."
 Game screen: "A source-cited question with answer plates, prize ladder and lifelines."
 Reveal: "Correct answers show the explanation and the book the question came from."
@@ -71,18 +74,18 @@ In the lobby, keep both books selected, choose groq: openai/gpt-oss-20b, 10 ques
 Press PLAY. The server retrieves from each book, reranks, writes and validates the questions.
 Answer each question, lock in, see the explanation and citation.
 On the results screen, review mistakes and play again at a higher difficulty.
-11. Architecture Summary
 
+Architecture Summary
 The dashboard calls a FastAPI service. For each request the service resolves the selected sources, runs filtered hybrid retrieval per book, removes any chunk from an unselected source, and reranks the rest with a BGE cross-encoder. A prompt with only that evidence goes to the chosen LLM in JSON mode. The reply is parsed and validated (schema, citations, grounding, duplicates); invalid or duplicate questions trigger bounded regeneration. The learner view hides answers until you lock in. A separate LLM layer handles rate limits, retries, token budgets and caching, and a background indexer keeps the vector store in sync with the knowledge folder.
 
-12. Future Improvements
-
+Future Improvements
 OCR for scanned PDFs; server-side grading and learner history; spaced repetition; export to PDF or Anki; Docker and cross-platform launcher; question-quality evaluation dashboard; optional LangChain or LlamaIndex integration; multi-user accounts.
 
-13. Challenges Solved
+Challenges Solved
 Keeping questions strictly inside the selected books (source isolation before reranking).
 Distinguishing and handling Groq per-minute vs daily rate limits without retry storms.
 Empty or truncated LLM output caused by token budgets (finish_reason=length) with a controlled larger-budget retry.
+
 Small local models returning incomplete JSON (strict validation, regeneration, tolerant handling of a missing headline field on scenario types).
 Slow reranker calls (candidate cap, passage truncation, warm-up, honest fallback).
 First-run friction on Windows (auto .env repair, background indexing, one-click launcher).
