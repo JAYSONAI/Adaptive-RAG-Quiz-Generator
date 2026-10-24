@@ -1,5 +1,6 @@
-#Quiz Showdown
-Adaptive RAG quiz generator that writes cited, validated exam questions only from the books you choose, played in a game-show-style dashboard. Built for Microsoft AI-103 prep.
+#Adaptive RAG quiz generator
+
+This quiz generator that writes cited, validated exam questions only from the books you choose, played in a game-show-style dashboard. Built for Microsoft AI-103 prep.
 Project Overview
 
 What it does: Indexes your PDF, DOCX, TXT, Markdown and HTML study material, then generates practice questions from only the books you select. Each question cites its source and passes schema, citation, grounding and duplicate checks before you see it.
@@ -89,3 +90,5 @@ Empty or truncated LLM output caused by token budgets (finish_reason=length) wit
 Small local models returning incomplete JSON (strict validation, regeneration, tolerant handling of a missing headline field on scenario types).
 Slow reranker calls (candidate cap, passage truncation, warm-up, honest fallback).
 First-run friction on Windows (auto .env repair, background indexing, one-click launcher).
+
+rag, retrieval-augmented-generation, llm, quiz-generator, exam-prep, education, ai-103, azure-ai, fastapi, python, chromadb, ollama, groq, reranker, bge, embeddings, semantic-search, pydantic, gamification, study-tool
