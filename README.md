@@ -171,7 +171,7 @@ python -m pytest
 ```
 The suite (about 175 tests) uses in-memory Chroma/Qdrant and scripted mock servers for the LLM, Ollama and the reranker, so it needs no network. The dashboard was checked with jsdom against the real API.
 
-<img width="2306" height="2268" alt="image" src="https://github.com/user-attachments/assets/ceabfb93-553f-4ed5-9427-8f7696bb8391" />
+add `docslobby.jpg` and `docsgame.jpg`
 
 - **Lobby:** select books, choose a model from the dropdown, pick question types, and press PLAY.
 - **Game screen:** a cited question with answer plates, prize ladder and lifelines.
