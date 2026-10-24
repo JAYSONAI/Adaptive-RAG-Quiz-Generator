@@ -173,8 +173,8 @@ The suite (about 175 tests) uses in-memory Chroma/Qdrant and scripted mock serve
 
 ## Screenshots
 <!-- Uncomment once you add the images
-![Lobby: choose books, model and question types](docs/lobby.png)
-![Game screen: question, prize ladder and lifelines](docs/game.png)
+![Lobby: choose books, model and question types](docslobby.jpg)
+![Game screen: question, prize ladder and lifelines](docsgame.jpg)
 -->
 - **Lobby:** select books, choose a model from the dropdown, pick question types, and press PLAY.
 - **Game screen:** a cited question with answer plates, prize ladder and lifelines.
