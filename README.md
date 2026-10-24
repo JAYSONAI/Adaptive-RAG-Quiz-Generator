@@ -4,7 +4,7 @@
 
 Built to prepare for the **Microsoft AI-103** exam, but it works with any PDF, DOCX, TXT, Markdown or HTML you put in the knowledge folder.
 
-> Screenshots: add `docs/lobby.png` and `docs/game.png`, then uncomment the images in the [Screenshots](#screenshots) section.
+> Screenshots: add `docslobby.jpg` and `docsgame.jpg`, then uncomment the images in the [Screenshots](#screenshots) section.
 
 ---
 
